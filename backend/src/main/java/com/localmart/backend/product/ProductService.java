@@ -1,17 +1,18 @@
 package com.localmart.backend.product;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProductService {
 
-    private final Map<Long, Product> products = new HashMap<>();
-    private long nextId = 1;
+    private final Map<Long, Product> products = new ConcurrentHashMap<>();
+    private final AtomicLong nextId = new AtomicLong(1);
 
     public ProductService() {
         addProduct(new CreateProductRequest("Aashirvaad Atta 5kg", 260, 10));
@@ -32,7 +33,7 @@ public class ProductService {
     }
 
     public Product addProduct(CreateProductRequest request) {
-        Long id = nextId++;
+        Long id = nextId.getAndIncrement();
         Product product = new Product(id, request.name(), request.price(), request.stock());
         products.put(id, product);
         return product;
