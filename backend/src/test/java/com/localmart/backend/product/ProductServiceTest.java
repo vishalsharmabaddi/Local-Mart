@@ -2,18 +2,35 @@ package com.localmart.backend.product;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
+
+    @Mock
+    ProductRepository productRepository;   // fake repository, no real DB
+
+    @InjectMocks
+    ProductService productService;         // real service, with the fake repository injected
 
     @Test
     void getProductById_whenProductExists_returnsProduct() {
-        // Arrange
-        ProductService service = new ProductService();
+        // Arrange: teach the fake what to return
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(new Product("Aashirvaad Atta 5kg", 260, 10)));
 
         // Act
-        Product product = service.getProductById(1L);
+        Product product = productService.getProductById(1L);
 
         // Assert
         assertEquals("Aashirvaad Atta 5kg", product.getName());
@@ -21,18 +38,21 @@ class ProductServiceTest {
 
     @Test
     void getProductById_whenProductMissing_throwsNotFound() {
-        ProductService service = new ProductService();
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ProductNotFoundException.class, () -> service.getProductById(99L));
+        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(99L));
     }
 
     @Test
-    void addProduct_assignsNextIdAndStoresProduct() {
-        ProductService service = new ProductService();   // starts with 3 products
+    void addProduct_savesProductWithRequestData() {
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));   // return what was saved
 
-        Product saved = service.addProduct(new CreateProductRequest("Dettol Soap", 45, 20));
+        Product saved = productService.addProduct(new CreateProductRequest("Dettol Soap", 45, 20));
 
-        assertEquals(4L, saved.getId());
-        assertEquals(4, service.getAllProducts().size());
+        assertEquals("Dettol Soap", saved.getName());
+        assertEquals(45, saved.getPrice());
+        assertEquals(20, saved.getStock());
+        verify(productRepository).save(any(Product.class));   // was save() really called?
     }
 }

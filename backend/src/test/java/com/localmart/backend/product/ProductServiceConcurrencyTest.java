@@ -2,20 +2,32 @@ package com.localmart.backend.product;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest   // starts the full app with the real Postgres DB
 class ProductServiceConcurrencyTest {
 
-    @Test
-    void addProduct_fromManyThreadsAtOnce_shouldNotLoseProducts() throws InterruptedException {
-        ProductService service = new ProductService();   // starts with 3 products
-        int requests = 10_000;
+    @Autowired
+    ProductService productService;
 
-        ExecutorService pool = Executors.newFixedThreadPool(50);
+    @Autowired
+    ProductRepository productRepository;
+
+    @Test
+    void addProduct_fromManyThreadsAtOnce_givesEveryProductAUniqueId() throws InterruptedException {
+        int requests = 500;
+        Queue<Long> savedIds = new ConcurrentLinkedQueue<>();
+
+        ExecutorService pool = Executors.newFixedThreadPool(20);
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(requests);
 
@@ -23,7 +35,8 @@ class ProductServiceConcurrencyTest {
             pool.submit(() -> {
                 try {
                     startSignal.await();
-                    service.addProduct(new CreateProductRequest("Test", 10, 1));
+                    Product saved = productService.addProduct(new CreateProductRequest("Test", 10, 1));
+                    savedIds.add(saved.getId());
                 } finally {
                     done.countDown();
                 }
@@ -31,10 +44,17 @@ class ProductServiceConcurrencyTest {
             });
         }
 
-        startSignal.countDown();   // sab threads ek saath shuru
-        done.await();              // sabke khatam hone ka intezaar
+        startSignal.countDown();
+        done.await();
         pool.shutdown();
 
-        assertEquals(3 + requests, service.getAllProducts().size());
+        try {
+            List<Long> ids = List.copyOf(savedIds);
+            assertEquals(requests, ids.size());                                  // every save returned
+            assertEquals(requests, ids.stream().distinct().count());             // no duplicate ids
+            assertEquals(requests, productRepository.findAllById(ids).size());   // all really in DB
+        } finally {
+            productRepository.deleteAllById(savedIds);   // clean up test data
+        }
     }
 }

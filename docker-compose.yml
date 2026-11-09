@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: localmart-db
+    environment:
+      POSTGRES_DB: localmart
+      POSTGRES_USER: localmart
+      POSTGRES_PASSWORD: localmart123
+    ports:
+      - "5433:5432"
+    volumes:
+      - localmart-data:/var/lib/postgresql/data
+
+volumes:
+  localmart-data:
