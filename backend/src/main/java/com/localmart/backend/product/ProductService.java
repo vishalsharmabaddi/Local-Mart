@@ -11,11 +11,12 @@ import org.springframework.stereotype.Service;
 public class ProductService {
 
     private final Map<Long, Product> products = new HashMap<>();
+    private long nextId = 1;
 
     public ProductService() {
-        products.put(1L, new Product(1L, "Aashirvaad Atta 5kg", 260, 10));
-        products.put(2L, new Product(2L, "Fortune Sarson Tel 1L", 180, 5));
-        products.put(3L, new Product(3L, "Tata Namak 1kg", 28, 30));
+        addProduct(new CreateProductRequest("Aashirvaad Atta 5kg", 260, 10));
+        addProduct(new CreateProductRequest("Fortune Sarson Tel 1L", 180, 5));
+        addProduct(new CreateProductRequest("Tata Namak 1kg", 28, 30));
     }
 
     public List<Product> getAllProducts() {
@@ -27,6 +28,13 @@ public class ProductService {
         if (product == null) {
             throw new ProductNotFoundException(id);
         }
+        return product;
+    }
+
+    public Product addProduct(CreateProductRequest request) {
+        Long id = nextId++;
+        Product product = new Product(id, request.name(), request.price(), request.stock());
+        products.put(id, product);
         return product;
     }
 }

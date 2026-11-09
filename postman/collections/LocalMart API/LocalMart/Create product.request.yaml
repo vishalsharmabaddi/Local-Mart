@@ -1,0 +1,16 @@
+$kind: http-request
+name: Create product
+url: http://localhost:8081/products
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\": \"\",\r
+
+    \    \"price\": -50,\r
+
+    \    \"stock\": -10\r
+
+    }"
+order: 600283982394165
