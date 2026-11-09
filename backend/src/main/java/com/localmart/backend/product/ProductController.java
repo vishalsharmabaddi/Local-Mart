@@ -2,6 +2,8 @@ package com.localmart.backend.product;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +33,7 @@ public class ProductController {
 
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
-    public Product addProduct(@RequestBody CreateProductRequest request) {
+    public Product addProduct(@Valid @RequestBody CreateProductRequest request) {
         return productService.addProduct(request);
     }
 }
