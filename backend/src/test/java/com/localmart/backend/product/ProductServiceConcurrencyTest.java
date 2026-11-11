@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.localmart.backend.shop.ShopRepository;
+
 @SpringBootTest   // starts the full app with the real Postgres DB
 class ProductServiceConcurrencyTest {
 
@@ -22,9 +24,13 @@ class ProductServiceConcurrencyTest {
     @Autowired
     ProductRepository productRepository;
 
+    @Autowired
+    ShopRepository shopRepository;
+
     @Test
     void addProduct_fromManyThreadsAtOnce_givesEveryProductAUniqueId() throws InterruptedException {
         int requests = 500;
+        Long shopId = shopRepository.findAll().get(0).getId();   // the seeded shop
         Queue<Long> savedIds = new ConcurrentLinkedQueue<>();
 
         ExecutorService pool = Executors.newFixedThreadPool(20);
@@ -35,7 +41,7 @@ class ProductServiceConcurrencyTest {
             pool.submit(() -> {
                 try {
                     startSignal.await();
-                    Product saved = productService.addProduct(new CreateProductRequest("Test", 10, 1));
+                    Product saved = productService.addProduct(new CreateProductRequest("Test", 10, 1, shopId));
                     savedIds.add(saved.getId());
                 } finally {
                     done.countDown();

@@ -1,9 +1,15 @@
 package com.localmart.backend.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.localmart.backend.shop.Shop;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Product {
@@ -15,18 +21,28 @@ public class Product {
     private int price;
     private int stock;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)   // many products -> one shop
+    @JoinColumn(name = "shop_id")                           // foreign key column in product table
+    private Shop shop;
+
     protected Product() {
         // JPA needs an empty constructor to create objects from DB rows
     }
 
-    public Product(String name, int price, int stock) {
+    public Product(String name, int price, int stock, Shop shop) {
         this.name = name;
         this.price = price;
         this.stock = stock;
+        this.shop = shop;
     }
 
     public Long getId() { return id; }
     public String getName() { return name; }
     public int getPrice() { return price; }
     public int getStock() { return stock; }
+
+    @JsonIgnore                                  // don't send the whole Shop object in JSON
+    public Shop getShop() { return shop; }
+
+    public Long getShopId() { return shop.getId(); }   // send only the shop's id
 }
