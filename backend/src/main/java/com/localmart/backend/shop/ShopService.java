@@ -3,9 +3,10 @@ package com.localmart.backend.shop;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.localmart.backend.product.Product;
 import com.localmart.backend.product.ProductRepository;
+import com.localmart.backend.product.ProductResponse;
 
 @Service
 public class ShopService {
@@ -31,10 +32,13 @@ public class ShopService {
                 .orElseThrow(() -> new ShopNotFoundException(id));
     }
 
-    public List<Product> getProductsOfShop(Long shopId) {
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getProductsOfShop(Long shopId) {
         if (!shopRepository.existsById(shopId)) {
             throw new ShopNotFoundException(shopId);   // 404, not an empty list
         }
-        return productRepository.findByShop_Id(shopId);
+        return productRepository.findByShop_Id(shopId).stream()
+                .map(ProductResponse::from)
+                .toList();
     }
 }

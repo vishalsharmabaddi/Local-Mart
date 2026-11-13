@@ -40,10 +40,11 @@ class ProductServiceTest {
                 .thenReturn(Optional.of(new Product("Aashirvaad Atta 5kg", 260, 10, shop)));
 
         // Act
-        Product product = productService.getProductById(1L);
+        ProductResponse product = productService.getProductById(1L);
 
         // Assert
-        assertEquals("Aashirvaad Atta 5kg", product.getName());
+        assertEquals("Aashirvaad Atta 5kg", product.name());
+        assertEquals("Sharma Kirana Store", product.shopName());
     }
 
     @Test
@@ -59,12 +60,12 @@ class ProductServiceTest {
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));   // return what was saved
 
-        Product saved = productService.addProduct(new CreateProductRequest("Dettol Soap", 45, 20, 1L));
+        ProductResponse saved = productService.addProduct(new CreateProductRequest("Dettol Soap", 45, 20, 1L));
 
-        assertEquals("Dettol Soap", saved.getName());
-        assertEquals(45, saved.getPrice());
-        assertEquals(20, saved.getStock());
-        assertEquals(shop, saved.getShop());
+        assertEquals("Dettol Soap", saved.name());
+        assertEquals(45, saved.price());
+        assertEquals(20, saved.stock());
+        assertEquals("Sharma Kirana Store", saved.shopName());
         verify(productRepository).save(any(Product.class));   // was save() really called?
     }
 

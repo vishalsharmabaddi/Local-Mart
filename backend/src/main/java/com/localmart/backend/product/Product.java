@@ -1,6 +1,5 @@
 package com.localmart.backend.product;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.localmart.backend.shop.Shop;
 
 import jakarta.persistence.Entity;
@@ -41,8 +40,5 @@ public class Product {
     public int getPrice() { return price; }
     public int getStock() { return stock; }
 
-    @JsonIgnore                                  // don't send the whole Shop object in JSON
     public Shop getShop() { return shop; }
-
-    public Long getShopId() { return shop.getId(); }   // send only the shop's id
 }

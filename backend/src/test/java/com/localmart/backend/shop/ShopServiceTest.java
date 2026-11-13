@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.localmart.backend.product.Product;
 import com.localmart.backend.product.ProductRepository;
+import com.localmart.backend.product.ProductResponse;
 
 @ExtendWith(MockitoExtension.class)
 class ShopServiceTest {
@@ -48,10 +49,10 @@ class ShopServiceTest {
         when(productRepository.findByShop_Id(1L))
                 .thenReturn(List.of(new Product("Tata Namak 1kg", 28, 30, shop)));
 
-        List<Product> products = shopService.getProductsOfShop(1L);
+        List<ProductResponse> products = shopService.getProductsOfShop(1L);
 
         assertEquals(1, products.size());
-        assertEquals("Tata Namak 1kg", products.get(0).getName());
+        assertEquals("Tata Namak 1kg", products.get(0).name());
     }
 
     @Test

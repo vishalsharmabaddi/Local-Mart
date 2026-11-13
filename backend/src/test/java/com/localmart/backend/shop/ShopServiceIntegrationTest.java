@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.localmart.backend.product.Product;
+import com.localmart.backend.product.ProductResponse;
 
 @SpringBootTest   // real app + real Postgres: catches query mistakes that mocks can't
 class ShopServiceIntegrationTest {
@@ -23,7 +23,7 @@ class ShopServiceIntegrationTest {
     void getProductsOfShop_runsRealQueryAndReturnsSeededProducts() {
         Long seededShopId = shopRepository.findAll().get(0).getId();   // Sharma Kirana Store
 
-        List<Product> products = shopService.getProductsOfShop(seededShopId);
+        List<ProductResponse> products = shopService.getProductsOfShop(seededShopId);
 
         assertFalse(products.isEmpty());
     }

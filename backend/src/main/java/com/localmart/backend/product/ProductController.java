@@ -22,18 +22,18 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public List<Product> getAllProducts() {
+    public List<ProductResponse> getAllProducts() {
         return productService.getAllProducts();
     }
 
     @GetMapping("/products/{id}")
-    public Product getProductById(@PathVariable Long id) {
+    public ProductResponse getProductById(@PathVariable Long id) {
         return productService.getProductById(id);
     }
 
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
-    public Product addProduct(@Valid @RequestBody CreateProductRequest request) {
+    public ProductResponse addProduct(@Valid @RequestBody CreateProductRequest request) {
         return productService.addProduct(request);
     }
 }

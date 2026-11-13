@@ -3,6 +3,7 @@ package com.localmart.backend.product;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.localmart.backend.shop.Shop;
 import com.localmart.backend.shop.ShopNotFoundException;
@@ -19,20 +20,26 @@ public class ProductService {
         this.shopRepository = shopRepository;
     }
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getAllProducts() {
+        return productRepository.findAllWithShop().stream()   // JOIN FETCH → no N+1
+                .map(ProductResponse::from)
+                .toList();
     }
 
-    public Product getProductById(Long id) {
-        return productRepository.findById(id)
+    @Transactional(readOnly = true)
+    public ProductResponse getProductById(Long id) {
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
+        return ProductResponse.from(product);
     }
 
-    public Product addProduct(CreateProductRequest request) {
+    @Transactional
+    public ProductResponse addProduct(CreateProductRequest request) {
         Shop shop = shopRepository.findById(request.shopId())
                 .orElseThrow(() -> new ShopNotFoundException(request.shopId()));
 
         Product product = new Product(request.name(), request.price(), request.stock(), shop);
-        return productRepository.save(product);
+        return ProductResponse.from(productRepository.save(product));
     }
 }

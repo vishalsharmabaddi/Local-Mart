@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.localmart.backend.product.Product;
+import com.localmart.backend.product.ProductResponse;
 
 @RestController
 @RequestMapping("/shops")   // every URL in this class starts with /shops
@@ -42,7 +42,7 @@ public class ShopController {
     }
 
     @GetMapping("/{id}/products")
-    public List<Product> getProductsOfShop(@PathVariable Long id) {
+    public List<ProductResponse> getProductsOfShop(@PathVariable Long id) {
         return shopService.getProductsOfShop(id);
     }
 }

@@ -41,8 +41,8 @@ class ProductServiceConcurrencyTest {
             pool.submit(() -> {
                 try {
                     startSignal.await();
-                    Product saved = productService.addProduct(new CreateProductRequest("Test", 10, 1, shopId));
-                    savedIds.add(saved.getId());
+                    ProductResponse saved = productService.addProduct(new CreateProductRequest("Test", 10, 1, shopId));
+                    savedIds.add(saved.id());
                 } finally {
                     done.countDown();
                 }
