@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.localmart.backend.security.CurrentUser;
 import com.localmart.backend.shop.ShopRepository;
+import com.localmart.backend.user.Role;
 
 @SpringBootTest   // starts the full app with the real Postgres DB
 class ProductServiceConcurrencyTest {
@@ -30,6 +32,7 @@ class ProductServiceConcurrencyTest {
     @Test
     void addProduct_fromManyThreadsAtOnce_givesEveryProductAUniqueId() throws InterruptedException {
         int requests = 500;
+        CurrentUser admin = new CurrentUser(1L, Role.ADMIN);   // admin may add to any shop
         Long shopId = shopRepository.findAll().get(0).getId();   // the seeded shop
         Queue<Long> savedIds = new ConcurrentLinkedQueue<>();
 
@@ -41,7 +44,7 @@ class ProductServiceConcurrencyTest {
             pool.submit(() -> {
                 try {
                     startSignal.await();
-                    ProductResponse saved = productService.addProduct(new CreateProductRequest("Test", 10, 1, shopId));
+                    ProductResponse saved = productService.addProduct(new CreateProductRequest("Test", 10, 1, shopId), admin);
                     savedIds.add(saved.id());
                 } finally {
                     done.countDown();
