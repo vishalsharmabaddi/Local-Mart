@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products/**", "/shops/**").permitAll()
                         // only shop owners and admins can create shops/products
                         .requestMatchers(HttpMethod.POST, "/shops", "/products").hasAnyRole("SHOP_OWNER", "ADMIN")
+                        // only customers place orders
+                        .requestMatchers(HttpMethod.POST, "/orders").hasRole("CUSTOMER")
                         // everything else: any logged-in user
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

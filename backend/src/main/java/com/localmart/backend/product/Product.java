@@ -41,4 +41,12 @@ public class Product {
     public int getStock() { return stock; }
 
     public Shop getShop() { return shop; }
+
+    // the product guards its own rule: stock can never go below 0
+    public void decreaseStock(int quantity) {
+        if (quantity > stock) {
+            throw new InsufficientStockException(name, stock, quantity);
+        }
+        stock -= quantity;
+    }
 }

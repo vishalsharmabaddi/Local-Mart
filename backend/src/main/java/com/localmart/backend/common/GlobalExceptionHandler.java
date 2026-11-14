@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.localmart.backend.auth.InvalidCredentialsException;
 import com.localmart.backend.auth.PhoneAlreadyRegisteredException;
+import com.localmart.backend.product.InsufficientStockException;
 import com.localmart.backend.product.ProductNotFoundException;
 import com.localmart.backend.shop.ShopNotFoundException;
 
@@ -49,6 +50,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(401, ex.getMessage()));
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(409, ex.getMessage()));
     }
 
     @ExceptionHandler(PhoneAlreadyRegisteredException.class)
