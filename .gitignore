@@ -1,0 +1,11 @@
+# personal editor/IDE settings (each developer has their own)
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# local secret files, if we ever create them
+.env
+*.env

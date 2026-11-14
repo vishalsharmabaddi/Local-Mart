@@ -3,6 +3,7 @@ package com.localmart.backend.common;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import com.localmart.backend.user.UserRepository;
 
 // LOCAL DEV demo data only. These passwords must never exist in production.
 @Component
+@Profile("dev")
 public class DevDataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
