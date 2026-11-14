@@ -113,6 +113,35 @@ class SecurityRulesTest {
                 .andExpect(status().isCreated());
     }
 
+    // ---------- shop orders must NOT fall under the public GET /shops/** rule ----------
+
+    @Test
+    void shopOrders_withoutToken_is401_notPublic() throws Exception {
+        mockMvc.perform(get("/shops/" + ownersShop.getId() + "/orders"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shopOrders_asCustomer_is403() throws Exception {
+        mockMvc.perform(get("/shops/" + ownersShop.getId() + "/orders")
+                        .header("Authorization", tokenFor(customer)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shopOrders_asOwner_is200() throws Exception {
+        mockMvc.perform(get("/shops/" + ownersShop.getId() + "/orders")
+                        .header("Authorization", tokenFor(shopOwner)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shopOrders_asOtherShopOwner_is403() throws Exception {
+        mockMvc.perform(get("/shops/" + ownersShop.getId() + "/orders")
+                        .header("Authorization", tokenFor(otherShopOwner)))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     void addProduct_toSomeoneElsesShop_is403() throws Exception {
         mockMvc.perform(post("/products")

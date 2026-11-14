@@ -1,9 +1,12 @@
 package com.localmart.backend.order;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.localmart.backend.common.BadRequestException;
+import com.localmart.backend.common.ForbiddenException;
 import com.localmart.backend.product.Product;
 import com.localmart.backend.product.ProductNotFoundException;
 import com.localmart.backend.product.ProductRepository;
@@ -52,5 +55,42 @@ public class OrderService {
         }
 
         return OrderResponse.from(orderRepository.save(order));   // cascade saves the items too
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getMyOrders(CurrentUser currentUser) {
+        return orderRepository.findByCustomer_IdOrderByCreatedAtDesc(currentUser.id()).stream()
+                .map(OrderResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getShopOrders(Long shopId, CurrentUser currentUser) {
+        Shop shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new ShopNotFoundException(shopId));
+
+        // shops are public anyway, so 403 reveals nothing new
+        if (!currentUser.isAdmin() && !shop.isOwnedBy(currentUser.id())) {
+            throw new ForbiddenException("You can only see orders of your own shop");
+        }
+        return orderRepository.findByShop_IdOrderByCreatedAtDesc(shopId).stream()
+                .map(OrderResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getOrder(Long orderId, CurrentUser currentUser) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        boolean allowed = currentUser.isAdmin()
+                || order.getCustomer().getId().equals(currentUser.id())   // the customer who ordered
+                || order.getShop().isOwnedBy(currentUser.id());           // the shop that sells
+
+        if (!allowed) {
+            // 404, NOT 403: a stranger shouldn't even learn that order #id exists
+            throw new OrderNotFoundException(orderId);
+        }
+        return OrderResponse.from(order);
     }
 }

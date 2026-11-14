@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.localmart.backend.auth.InvalidCredentialsException;
 import com.localmart.backend.auth.PhoneAlreadyRegisteredException;
+import com.localmart.backend.order.OrderNotFoundException;
 import com.localmart.backend.product.InsufficientStockException;
 import com.localmart.backend.product.ProductNotFoundException;
 import com.localmart.backend.shop.ShopNotFoundException;
@@ -21,7 +22,7 @@ import com.localmart.backend.shop.ShopNotFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({ProductNotFoundException.class, ShopNotFoundException.class})
+    @ExceptionHandler({ProductNotFoundException.class, ShopNotFoundException.class, OrderNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException ex) {
         ErrorResponse error = new ErrorResponse(404, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);

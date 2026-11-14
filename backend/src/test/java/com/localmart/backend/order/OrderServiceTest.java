@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.localmart.backend.common.BadRequestException;
+import com.localmart.backend.common.ForbiddenException;
 import com.localmart.backend.product.InsufficientStockException;
 import com.localmart.backend.product.Product;
 import com.localmart.backend.product.ProductNotFoundException;
@@ -109,6 +110,55 @@ class OrderServiceTest {
                 () -> orderService.placeOrder(order(new OrderItemRequest(20L, 1)), geeta));
 
         verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    // ---------- who can see an order? ----------
+
+    Order geetasOrder() {
+        Order order = new Order(geetaUser, sharmaKirana);
+        order.addItem(atta, 1);
+        return order;
+    }
+
+    @Test
+    void getOrder_byTheCustomerWhoOrdered_isAllowed() {
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(geetasOrder()));
+
+        OrderResponse response = orderService.getOrder(1L, geeta);
+
+        assertEquals(260, response.totalAmount());
+    }
+
+    @Test
+    void getOrder_byTheShopOwner_isAllowed() {
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(geetasOrder()));
+
+        orderService.getOrder(1L, new CurrentUser(2L, Role.SHOP_OWNER));   // Ramesh owns Sharma Kirana
+    }
+
+    @Test
+    void getOrder_byAdmin_isAllowed() {
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(geetasOrder()));
+
+        orderService.getOrder(1L, new CurrentUser(1L, Role.ADMIN));
+    }
+
+    @Test
+    void getOrder_byStranger_looksLikeItDoesNotExist() {
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(geetasOrder()));
+
+        assertThrows(OrderNotFoundException.class,
+                () -> orderService.getOrder(1L, new CurrentUser(99L, Role.CUSTOMER)));
+    }
+
+    @Test
+    void getShopOrders_byAnotherShopOwner_isForbidden_andNeverQueriesOrders() {
+        when(shopRepository.findById(1L)).thenReturn(Optional.of(sharmaKirana));
+
+        assertThrows(ForbiddenException.class,
+                () -> orderService.getShopOrders(1L, new CurrentUser(5L, Role.SHOP_OWNER)));
+
+        verify(orderRepository, never()).findByShop_IdOrderByCreatedAtDesc(any());
     }
 
     @Test

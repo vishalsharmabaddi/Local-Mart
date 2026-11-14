@@ -40,6 +40,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // open for everyone
                         .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+                        // MUST be above the public "/shops/**" rule, otherwise shop orders become public
+                        .requestMatchers(HttpMethod.GET, "/shops/*/orders").hasAnyRole("SHOP_OWNER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/products/**", "/shops/**").permitAll()
                         // only shop owners and admins can create shops/products
                         .requestMatchers(HttpMethod.POST, "/shops", "/products").hasAnyRole("SHOP_OWNER", "ADMIN")
