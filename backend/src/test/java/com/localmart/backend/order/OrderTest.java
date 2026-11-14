@@ -49,6 +49,25 @@ class OrderTest {
     }
 
     @Test
+    void cancel_putsStockBack() {
+        Order order = new Order(geeta, shop);
+        order.addItem(atta, 2);   // atta stock is 10 (addItem itself doesn't touch stock)
+
+        order.changeStatus(OrderStatus.CANCELLED);
+
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        assertEquals(12, atta.getStock());   // 10 + 2 returned
+    }
+
+    @Test
+    void illegalMove_throws_andStatusStaysTheSame() {
+        Order order = new Order(geeta, shop);
+
+        assertThrows(InvalidStatusChangeException.class, () -> order.changeStatus(OrderStatus.DELIVERED));
+        assertEquals(OrderStatus.PLACED, order.getStatus());
+    }
+
+    @Test
     void items_cannotBeChangedFromOutside() {
         Order order = new Order(geeta, shop);
 

@@ -22,6 +22,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "orders")   // "order" is a reserved SQL word (ORDER BY)
@@ -49,6 +50,10 @@ public class Order {
     @Column(nullable = false)
     private Instant createdAt;
 
+    // customer cancels while the shop accepts at the same moment → only one may win
+    @Version
+    private long version;
+
     // one order → many items. "mappedBy" = the FK lives in OrderItem.order (order_id column)
     // cascade ALL = saving the order also saves its items
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -69,6 +74,19 @@ public class Order {
         OrderItem item = new OrderItem(this, product, quantity);
         items.add(item);
         totalAmount += item.getLineTotal();
+    }
+
+    // the ONLY way to change status → the state machine can't be bypassed
+    public void changeStatus(OrderStatus next) {
+        if (!status.canMoveTo(next)) {
+            throw new InvalidStatusChangeException("Cannot change order from " + status + " to " + next);
+        }
+        if (next == OrderStatus.CANCELLED) {
+            for (OrderItem item : items) {
+                item.getProduct().increaseStock(item.getQuantity());   // put stock back
+            }
+        }
+        status = next;
     }
 
     public Long getId() { return id; }

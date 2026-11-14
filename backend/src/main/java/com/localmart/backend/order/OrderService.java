@@ -57,6 +57,35 @@ public class OrderService {
         return OrderResponse.from(orderRepository.save(order));   // cascade saves the items too
     }
 
+    // WHO may change status:
+    //   shop owner / admin → any move the state machine allows
+    //   the customer       → only CANCEL, and only while still PLACED (shop hasn't accepted yet)
+    //   anyone else        → 404 (same as viewing)
+    @Transactional
+    public OrderResponse changeStatus(Long orderId, OrderStatus newStatus, CurrentUser currentUser) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        boolean isShopSide = currentUser.isAdmin() || order.getShop().isOwnedBy(currentUser.id());
+        boolean isCustomer = order.getCustomer().getId().equals(currentUser.id());
+
+        if (!isShopSide && !isCustomer) {
+            throw new OrderNotFoundException(orderId);
+        }
+        if (!isShopSide) {
+            if (newStatus != OrderStatus.CANCELLED) {
+                throw new ForbiddenException("Customers can only cancel an order");
+            }
+            if (order.getStatus() == OrderStatus.ACCEPTED) {   // only this case gets the special message
+                throw new InvalidStatusChangeException("The shop has already accepted this order, it can't be cancelled now");
+            }
+            // other states (OUT_FOR_DELIVERY, DELIVERED, CANCELLED) → the state machine below gives the right message
+        }
+
+        order.changeStatus(newStatus);   // state machine + restock on cancel; dirty checking saves it
+        return OrderResponse.from(order);
+    }
+
     @Transactional(readOnly = true)
     public List<OrderResponse> getMyOrders(CurrentUser currentUser) {
         return orderRepository.findByCustomer_IdOrderByCreatedAtDesc(currentUser.id()).stream()

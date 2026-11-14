@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +41,13 @@ public class OrderController {
     @GetMapping("/orders/{id}")
     public OrderResponse getOrder(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         return orderService.getOrder(id, CurrentUser.from(jwt));
+    }
+
+    // PATCH = change PART of a resource (only the status), not replace the whole order
+    @PatchMapping("/orders/{id}/status")
+    public OrderResponse changeStatus(@PathVariable Long id, @Valid @RequestBody UpdateStatusRequest request,
+                                      @AuthenticationPrincipal Jwt jwt) {
+        return orderService.changeStatus(id, request.status(), CurrentUser.from(jwt));
     }
 
     @GetMapping("/shops/{shopId}/orders")

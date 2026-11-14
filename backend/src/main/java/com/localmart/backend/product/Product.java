@@ -55,4 +55,9 @@ public class Product {
         }
         stock -= quantity;
     }
+
+    // used when an order is cancelled: the packets go back on the shelf
+    public void increaseStock(int quantity) {
+        stock += quantity;
+    }
 }

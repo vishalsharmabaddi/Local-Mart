@@ -151,6 +151,69 @@ class OrderServiceTest {
                 () -> orderService.getOrder(1L, new CurrentUser(99L, Role.CUSTOMER)));
     }
 
+    // ---------- who can change status? ----------
+
+    CurrentUser rameshUser = new CurrentUser(2L, Role.SHOP_OWNER);   // owns Sharma Kirana
+
+    @Test
+    void changeStatus_shopOwnerAccepts() {
+        Order order = geetasOrder();
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.changeStatus(1L, OrderStatus.ACCEPTED, rameshUser);
+
+        assertEquals(OrderStatus.ACCEPTED, response.status());
+    }
+
+    @Test
+    void changeStatus_customerCancelsPlacedOrder_stockComesBack() {
+        Order order = geetasOrder();   // 1 atta, atta stock 10
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+
+        orderService.changeStatus(1L, OrderStatus.CANCELLED, geeta);
+
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        assertEquals(11, atta.getStock());
+    }
+
+    @Test
+    void changeStatus_customerCannotAcceptHerOwnOrder() {
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(geetasOrder()));
+
+        assertThrows(ForbiddenException.class,
+                () -> orderService.changeStatus(1L, OrderStatus.ACCEPTED, geeta));
+    }
+
+    @Test
+    void changeStatus_customerCannotCancelAfterShopAccepted() {
+        Order order = geetasOrder();
+        order.changeStatus(OrderStatus.ACCEPTED);
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+
+        assertThrows(InvalidStatusChangeException.class,
+                () -> orderService.changeStatus(1L, OrderStatus.CANCELLED, geeta));
+        assertEquals(OrderStatus.ACCEPTED, order.getStatus());
+    }
+
+    @Test
+    void changeStatus_customerCancelsTwice_getsHonestMessage() {
+        Order order = geetasOrder();
+        order.changeStatus(OrderStatus.CANCELLED);
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+
+        InvalidStatusChangeException ex = assertThrows(InvalidStatusChangeException.class,
+                () -> orderService.changeStatus(1L, OrderStatus.CANCELLED, geeta));
+        assertEquals("Cannot change order from CANCELLED to CANCELLED", ex.getMessage());
+    }
+
+    @Test
+    void changeStatus_byStranger_is404() {
+        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(geetasOrder()));
+
+        assertThrows(OrderNotFoundException.class,
+                () -> orderService.changeStatus(1L, OrderStatus.CANCELLED, new CurrentUser(99L, Role.CUSTOMER)));
+    }
+
     @Test
     void getShopOrders_byAnotherShopOwner_isForbidden_andNeverQueriesOrders() {
         when(shopRepository.findById(1L)).thenReturn(Optional.of(sharmaKirana));
