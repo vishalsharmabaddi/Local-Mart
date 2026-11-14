@@ -1,9 +1,9 @@
 package com.localmart.backend.product;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.localmart.backend.common.PageResponse;
 import com.localmart.backend.security.CurrentUser;
 
 @RestController
@@ -26,8 +27,9 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public List<ProductResponse> getAllProducts() {
-        return productService.getAllProducts();
+    // ?page=0&size=20&sort=price,desc   (no params → page 0, 20 items, sorted by id)
+    public PageResponse<ProductResponse> getAllProducts(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return productService.getAllProducts(pageable);
     }
 
     @GetMapping("/products/{id}")
