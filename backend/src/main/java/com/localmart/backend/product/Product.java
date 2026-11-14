@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
 
 @Entity
 public class Product {
@@ -19,6 +20,11 @@ public class Product {
     private String name;
     private int price;
     private int stock;
+
+    // OPTIMISTIC LOCKING: every UPDATE does "... WHERE id=? AND version=<what I read>" and bumps it by 1.
+    // If someone else updated first, 0 rows match → my transaction fails instead of overwriting.
+    @Version
+    private long version;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)   // many products -> one shop
     @JoinColumn(name = "shop_id")                           // foreign key column in product table
