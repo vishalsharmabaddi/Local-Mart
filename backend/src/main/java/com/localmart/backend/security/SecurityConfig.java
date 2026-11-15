@@ -47,6 +47,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/shops", "/products").hasAnyRole("SHOP_OWNER", "ADMIN")
                         // only customers place orders
                         .requestMatchers(HttpMethod.POST, "/orders").hasRole("CUSTOMER")
+                        // machines (load balancer, uptime monitor) must reach health without login
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+                        // Spring's internal error page: must be open, otherwise a real 404/500 shows up as 401
+                        .requestMatchers("/error").permitAll()
+                        // API docs (only exist in dev; disabled in prod)
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // everything else: any logged-in user
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
