@@ -1,10 +1,13 @@
 import { Link, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
+import { useCart } from './cart/CartContext';
+import CartPage from './pages/CartPage';
 import LoginPage from './pages/LoginPage';
 import ProductsPage from './pages/ProductsPage';
 
 export default function App() {
   const { user, logout } = useAuth();
+  const { itemCount } = useCart();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -12,24 +15,31 @@ export default function App() {
         {/* <Link> changes the page WITHOUT reloading the whole site (single-page app) */}
         <Link to="/" className="text-xl font-bold">🛒 LocalMart</Link>
 
-        {user ? (
-          <div className="flex items-center gap-4">
-            <span className="text-sm">{user.name} ({user.role})</span>
-            <button onClick={logout} className="rounded-lg bg-white/20 px-3 py-1 text-sm hover:bg-white/30">
-              Logout
-            </button>
-          </div>
-        ) : (
-          <Link to="/login" className="rounded-lg bg-white px-3 py-1 text-sm font-semibold text-green-800">
-            Login
+        <div className="flex items-center gap-4">
+          <Link to="/cart" className="rounded-lg bg-white/20 px-3 py-1 text-sm hover:bg-white/30">
+            Cart ({itemCount})
           </Link>
-        )}
+
+          {user ? (
+            <>
+              <span className="text-sm">{user.name} ({user.role})</span>
+              <button onClick={logout} className="rounded-lg bg-white/20 px-3 py-1 text-sm hover:bg-white/30">
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="rounded-lg bg-white px-3 py-1 text-sm font-semibold text-green-800">
+              Login
+            </Link>
+          )}
+        </div>
       </header>
 
       {/* URL → which page to show */}
       <Routes>
         <Route path="/" element={<ProductsPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/cart" element={<CartPage />} />
       </Routes>
     </div>
   );
